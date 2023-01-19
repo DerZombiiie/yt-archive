@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/derzombiiie/yt-archive"
 	//	"google.golang.org/api/googleapi"
@@ -46,39 +47,33 @@ func main() {
 
 	e := json.NewEncoder(of)
 
-	idCh := make(chan string, 1)
-
-	go dlThread(e, idCh)
 	var line int64
+	var nDone = true //not Done
 
 	log.Printf("Waiting for ID '%s'\n", startID)
 	scan := startID == ""
-	for s.Scan() {
-		line++
+	for nDone {
+		var ids []string
 
 		if !scan {
 			scan = startID == s.Text()
-		} else {
-			fmt.Printf("%5d ", line)
-			idCh <- s.Text()
+		}
+
+		if !scan {
 			continue
 		}
 
-		if scan {
-			fmt.Printf("%5d ", line)
-			idCh <- s.Text()
-		}
-	}
-}
-
-func dlThread(enc *json.Encoder, idCh chan string) {
-	for {
-		id := <-idCh
-
-		if err := getMeta(id, enc); err != nil {
-			log.Fatalf("Error downloading video '%s': %s\n", id, err)
+		for i := 0; i < 50 && s.Scan(); i++ {
+			ids = append(ids, s.Text())
 		}
 
+		if len(ids) == 0 {
+			break
+		}
+
+		getMeta(strings.Join(ids, ","), e)
+
+		line++
 	}
 }
 
@@ -97,9 +92,9 @@ func getMeta(id string, enc *json.Encoder) error {
 		return fmt.Errorf("vres.Items==0!")
 	}
 
-	video := vres.Items[0]
-
-	enc.Encode(video)
+	for k := range vres.Items {
+		enc.Encode(vres.Items[k])
+	}
 
 	return nil
 }
