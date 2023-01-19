@@ -1,0 +1,10 @@
+test
+cmd/*/*out*/*
+cmd/*/.env
+cmd/*/env
+*.webm
+*.jpg
+*.nfo
+*.mp4
+*.mkv
+*txt
