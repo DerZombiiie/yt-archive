@@ -52,9 +52,9 @@ func main() {
 
 	log.Printf("Waiting for ID '%s'\n", startID)
 	scan := startID == ""
-	for nDone {
-		var ids []string
+	var ids []string
 
+	for nDone {
 		if !scan {
 			scan = startID == s.Text()
 		}
@@ -62,6 +62,7 @@ func main() {
 		if !scan {
 			continue
 		}
+
 
 		for i := 0; i < 50 && s.Scan(); i++ {
 			ids = append(ids, s.Text())
@@ -71,8 +72,11 @@ func main() {
 			break
 		}
 
-		getMeta(strings.Join(ids, ","), e)
+		if err := getMeta(strings.Join(ids, ","), e); err != nil {
+			log.Fatalf("Error getting meta: %s", err)
+		}
 
+		ids = nil
 		line++
 	}
 }
@@ -87,6 +91,7 @@ func getMeta(id string, enc *json.Encoder) error {
 	if err != nil {
 		return err
 	}
+
 
 	if len(vres.Items) == 0 {
 		return fmt.Errorf("vres.Items==0!")

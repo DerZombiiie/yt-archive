@@ -15,13 +15,17 @@ import (
 var kproc *os.Process
 
 func main() {
-	if len(os.Args) < 3 {
-		log.Fatal("Usage: download <videos.txt> <skipto> [yt-dlp args]...")
+	if len(os.Args) < 4 {
+		log.Fatal("Usage: download <videos.txt> <outfolder> [yt-dlp args]...")
 	}
 
-	out := "./outfiles/"
+	videos := os.Args[1]
+	out := os.Args[2]
+	dlpargs := os.Args[3:]
 
-	f, err := os.Open(os.Args[1])
+	log.Printf("Videos.txt: %s; out: %s; yt-dlp: %s\n", videos, out, strings.Join(dlpargs, " "))
+
+	f, err := os.Open(videos)
 	if err != nil {
 		log.Fatalf("OPEN: %s\n", err)
 	}
@@ -58,14 +62,15 @@ func main() {
 
 		id := s.Text()
 		// check if allready have:
-		if path, ok := have[id]; ok {
-			fmt.Printf("Already have %s: %s\n", id, path)
+		if _, ok := have[id]; ok {
+			fmt.Print(".")
+//			fmt.Printf("Already have %s: %s\n", id, path)
 			continue
 		}
 
 		session++
 
-		args := append(os.Args[3:], "-o", path.Join(out, id), "--", id)
+		args := append(dlpargs, "-o", path.Join(out, id), "--", id)
 		fmt.Printf(">> yt-dlp %s -> %d\n", strings.Join(args, " "), count)
 
 		cmd := exec.Command("yt-dlp", args...)
